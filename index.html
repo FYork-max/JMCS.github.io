@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JerkMate Ranked</title>
+
+    <style>
+        /* General Styles */
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            background-color: #0D0D0D;
+            color: #fff;
+        }
+
+        /* Container Styling */
+        .container {
+            margin-top: 50px;
+            padding: 30px;
+            background: #1C1C1C;
+            border-radius: 15px;
+            display: inline-block;
+            box-shadow: 0px 0px 15px rgba(255, 94, 0, 0.4);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        /* Inputs & Buttons */
+        input {
+            margin: 10px;
+            padding: 12px;
+            border: 2px solid #FF5E00;
+            border-radius: 8px;
+            font-size: 18px;
+            background: #333;
+            color: white;
+            width: 80%;
+            outline: none;
+            text-align: center;
+            transition: all 0.3s ease-in-out;
+        }
+
+        input:focus {
+            border-color: #FFA500;
+            box-shadow: 0 0 10px #FF5E00;
+        }
+
+        button {
+            padding: 12px 25px;
+            border: none;
+            background: linear-gradient(135deg, #FF5E00, #FF8C00);
+            color: #fff;
+            font-size: 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.3s ease-in-out;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background: linear-gradient(135deg, #FF8C00, #FFA500);
+            transform: scale(1.05);
+        }
+
+        /* Rank & Leaderboard */
+        #result {
+            margin-top: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #FFA500;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #FF5E00;
+            padding: 12px;
+            text-align: center;
+            font-size: 18px;
+        }
+
+        th {
+            background: #FF5E00;
+            color: black;
+        }
+
+        td {
+            background: #262626;
+        }
+
+        /* Back Button */
+        .back-button {
+            background: #FF5E00;
+            font-size: 16px;
+            margin-top: 20px;
+            padding: 10px 20px;
+            border-radius: 8px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Login Page -->
+    <div id="loginPage" class="container">
+        <h1><b>JerkMate Ranked</b></h1>
+        <h2>Login</h2>
+        <label for="username">Enter Username:</label>
+        <input type="text" id="username" maxlength="10" placeholder="Username">
+        <br>
+        <button onclick="login()">Enter</button>
+    </div>
+
+    <!-- Main Page -->
+    <div id="mainPage" class="container" style="display: none;">
+        <h1><b>JerkMate Ranked</b></h1>
+        <h2>Rank Calculator</h2>
+        <label for="sps">SPS:</label>
+        <input type="number" id="sps" placeholder="Enter SPS" min="1" max="20">
+        <br>
+        <label for="reds">Reds:</label>
+        <input type="number" id="reds" placeholder="Enter Reds">
+        <br>
+        <button onclick="calculateRank()">Get Rank</button>
+        <div id="result"></div>
+        <br>
+        <a href="#" onclick="showLeaderboard()" style="color: #FFA500;">View Leaderboard</a>
+    </div>
+
+    <!-- Leaderboard Page -->
+    <div id="leaderboardPage" class="container" style="display: none;">
+        <h1><b>Leaderboard</b></h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Username</th>
+                    <th>SPS</th>
+                </tr>
+            </thead>
+            <tbody id="leaderboardTableBody"></tbody>
+        </table>
+        <br>
+        <button class="back-button" onclick="backToMain()">Back</button>
+    </div>
+
+    <script>
+        let users = JSON.parse(localStorage.getItem("users")) || [];
+        let currentUser = "";
+
+        function login() {
+            let username = document.getElementById("username").value.trim();
+            if (username) {
+                currentUser = username;
+                document.getElementById("loginPage").style.display = "none";
+                document.getElementById("mainPage").style.display = "block";
+            }
+        }
+
+        function calculateRank() {
+            let sps = parseInt(document.getElementById("sps").value) || 0;
+            let reds = parseInt(document.getElementById("reds").value) || 0;
+            let adjustedSPS = Math.max(1, Math.min(sps - reds, 20));
+
+            updateLeaderboard(currentUser, adjustedSPS);
+        }
+
+        function updateLeaderboard(user, sps) {
+            users = users.filter(u => u.name !== user);
+            users.push({ name: user, sps: sps });
+            users.sort((a, b) => b.sps - a.sps);
+            users = users.slice(0, 5);
+            localStorage.setItem("users", JSON.stringify(users));
+        }
+
+        function showLeaderboard() {
+            let leaderboardTable = document.getElementById("leaderboardTableBody");
+            leaderboardTable.innerHTML = "";
+
+            users.forEach((user, index) => {
+                let row = `<tr><td>${index + 1}</td><td>${user.name}</td><td>${user.sps}</td></tr>`;
+                leaderboardTable.innerHTML += row;
+            });
+
+            document.getElementById("mainPage").style.display = "none";
+            document.getElementById("leaderboardPage").style.display = "block";
+        }
+
+        function backToMain() {
+            document.getElementById("leaderboardPage").style.display = "none";
+            document.getElementById("mainPage").style.display = "block";
+        }
+
+        // Attach functions to window so they are accessible globally
+        window.login = login;
+        window.calculateRank = calculateRank;
+        window.showLeaderboard = showLeaderboard;
+        window.backToMain = backToMain;
+    </script>
+</body>
+</html>
+
